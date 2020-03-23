@@ -8,6 +8,7 @@ import lxml.html as html
 from lxml.cssselect import CSSSelector
 import smtplib
 import io
+import functools
 
 
 ##################################################################
@@ -39,14 +40,12 @@ def get_credentials(email_address):
     )
 
     return {
-        "username":creds["Item"]["Username"]["S"]
+        "username":creds["Item"]["Username"]["S"],
         "password":creds["Item"]["Password"]["S"]
     }
 
 def get_expense():
-    # need to figure out how to assume role in lambda. written for local now
-    session = boto3.Session(profile_name='default')
-    s3 = session.client('s3')
+    s3 = boto3.client('s3')
     report = s3.get_object(Bucket = s3_bucket_name, Key=s3_file_name)
     binary = report['Body'].read()
     return load_workbook(io.BytesIO(binary))
@@ -67,10 +66,10 @@ def get_sum_data(data):
         if header.lower() is 'amount':
             amt_idx = idx
 
-    return reduce((lambda a,b:a[amt_idx]+b[amt_idx]), data[1:])
+    return functools.reduce((lambda a,b:a[amt_idx]+b[amt_idx]), data[1:])
 
 #uses previous month
-#no input
+#input is credentials from dynamodb
 #output is 2d array representing table to go in excel file
 def get_transactions(creds):
 
@@ -162,15 +161,17 @@ def save_locally(expense, tolls):
 
 
 ##################################################################
-## MAIN ##########################################################
+## lambda handler ################################################
 ##################################################################
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
+def lambda_handler(event, context):
     expense = get_expense()
-    data = get_transactions()
+    creds = get_credentials(event["requestContext"]["body"]["sender"])
+    data = get_transactions(creds)
     tolls = build_data_excel(data)
     fill_expense(expense, get_sum_data(data))
 
-    #save to s3 with date d
+    #save to s3 with date
     save_locally(expense, tolls)
-    #send both to mom email
+    #send both to email
