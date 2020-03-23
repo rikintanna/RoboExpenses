@@ -1,0 +1,60 @@
+
+Tolls Project:
+
+process:
+1. send email prompting mom to select dates worked 
+2. post call with form data to AWS Lambda to trigger python script 
+3. see psuedo code 
+4. 
+
+
+
+1. Infrastructure
+	1. AWS Lambda 
+		- post code to lambda, execute on post call (form data passed in)
+		- need to set up email sending 
+2. NTTA
+    1. NTTA website uses cookie based authentication to grab user data
+        1. See Swagger article on cookie sessions 
+    2. Data is not delivered dynamically, it is delivered as a web page
+        1. Will have to grab webpage and parse into JSON object 
+    3. 
+3. Excel
+4. Communication/Delivery
+	1. Deliver dates not worked 
+	2. Deliver excel files to mom email 
+
+
+
+toll project notes
+
+get cookie:
+https://csc.ntta.org/olcsc/AuthenticateUser.do
+POST
+
+get transactions
+https://csc.ntta.org/olcsc/DisplayTransactions.do?buttonClicked=Y
+POST
+
+psuedo:
+
+----- set up------
+grab excel files from s3
+calculate month of transactions
+
+
+---- ntta ----
+login, store cookie
+create body/header objs using month and cookie
+get transactions (static html file)
+parse HTML for transactions, store into JSON object
+
+---- excel ----
+write transactions to excel file
+calculate total and write to expense report excel, changing dates
+send both files to mama email
+
+
+
+
+
